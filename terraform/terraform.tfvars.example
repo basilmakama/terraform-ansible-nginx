@@ -1,0 +1,12 @@
+
+
+# AWS Configuration
+region          = "us-east-1"                # AWS region (change if needed)
+instance_type   = "t2.micro"                 # EC2 instance type
+
+# SSH Access (CRITICAL - MUST UPDATE)
+public_key_path = "~/.ssh/YOUR_SSH_KEY.pub"  # Path to YOUR public key
+allowed_ssh_ip  = "YOUR_PUBLIC_IP/32"        # Your public IP in CIDR notation
+
+# Internal DNS (Private Route53)
+internal_domain = "internal.example.com"     # Private domain for VPC

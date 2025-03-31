@@ -1,0 +1,10 @@
+# Top-level .gitignore
+# Terraform
+**/.terraform/*
+**/*.tfstate*
+**/*.tfvars
+
+# Ansible
+ansible/venv/
+ansible/*.retry
+ansible/roles/downloads/
