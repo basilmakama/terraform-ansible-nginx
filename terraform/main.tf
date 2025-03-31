@@ -159,20 +159,3 @@ data "aws_ami" "ubuntu" {
   # Official Canonical (Ubuntu) account ID
   owners = ["099720109477"]
 }
-
-# Output values that we might want to reference later
-# These are displayed after 'terraform apply' and can be used by other tools
-output "instance_public_ip" {
-  description = "Public IP address of the EC2 instance"
-  value       = aws_instance.nginx.public_ip  # Will be used by Ansible
-}
-
-output "instance_public_dns" {
-  description = "Public DNS name of the EC2 instance"
-  value       = aws_instance.nginx.public_dns
-}
-
-output "internal_domain" {
-  description = "Internal domain name for the nginx server"
-  value       = aws_route53_record.nginx.fqdn  # Fully qualified domain name
-}
