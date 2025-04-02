@@ -1,11 +1,23 @@
+# Locks versions to prevent unexpected compatibility issues
+terraform {
+  required_version = ">= 1.0.0, < 2.0.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # Configure the AWS Provider
 provider "aws" {
-  region = var.region  # The region is set in variables.tf
+  region = var.region
 }
 
 # VPC where all resources will live
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"  # 65536 private IP addresses available
+  cidr_block = "10.0.0.0/24"  #  private IP addresses available
   enable_dns_support = true    # Required for DNS resolution
   enable_dns_hostnames = true  # Gives instances DNS names
   tags = {
@@ -17,17 +29,19 @@ resource "aws_vpc" "main" {
 # Public subnets can communicate with the internet
 resource "aws_subnet" "public" {
   vpc_id     = aws_vpc.main.id  # Attaches to our VPC
-  cidr_block = "10.0.1.0/24"    # 256 IP addresses in this subnet
+  cidr_block = "10.0.0.0/26"    # 64 IP addresses in this subnet
   map_public_ip_on_launch = true # Automatically assigns public IPs
   availability_zone = "${var.region}a"  # Places in first AZ of the region
+  
   tags = {
-    Name = "nginx-public-subnet"  # Tag
+    Name = "nginx-public-subnet"  
   }
 }
 
 # Create an Internet Gateway that allows communication between our VPC and the internet
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id  # Attaches to our VPC
+  
   tags = {
     Name = "nginx-igw"  # Tag
   }
@@ -44,7 +58,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "nginx-public-rt"  # Tag
+    Name = "nginx-public-rt" 
   }
 }
 
@@ -78,6 +92,13 @@ resource "aws_security_group" "nginx" {
     cidr_blocks = [var.allowed_ssh_ip]  # From variables.tf
   }
 
+  ingress {
+  from_port   = 80
+  to_port     = 80
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # Outbound rule: Allow all outbound traffic
   egress {
     from_port   = 0        
@@ -87,7 +108,7 @@ resource "aws_security_group" "nginx" {
   }
 
   tags = {
-    Name = "nginx-sg"  # Tag
+    Name = "nginx-sg" 
   }
 }
 
@@ -104,26 +125,25 @@ resource "aws_instance" "nginx" {
   user_data = <<-EOF
               #!/bin/bash
               apt-get update
-              apt-get install -y python3
+              apt-get install -y python3 python3-pip
+              pip3 install --upgrade pip
               EOF
 
   tags = {
-    Name = "nginx-server"  # Tag
+    Name = "nginx-server" 
   }
 }
 
-# Create an SSH key pair for secure access
+# SSH key pair for secure access
 resource "aws_key_pair" "nginx" {
   key_name   = "nginx-key"                # Name of key in AWS
   public_key = file(var.public_key_path)  # Path to your local public key
 }
 
 # Create a private Route53 DNS zone
-# This will only be accessible within our VPC
 resource "aws_route53_zone" "internal" {
   name    = var.internal_domain  # Domain name (from variables.tf)
   comment = "Internal zone for nginx server"
-
   # Associates this DNS zone with our VPC
   vpc {
     vpc_id = aws_vpc.main.id
@@ -133,16 +153,15 @@ resource "aws_route53_zone" "internal" {
 # Create a DNS A record pointing to our EC2 instance
 resource "aws_route53_record" "nginx" {
   zone_id = aws_route53_zone.internal.zone_id  # Our private zone
-  name    = "nginx.${var.internal_domain}"     # Subdomain (nginx.internal.example.com)
+  name    = "nginx.${var.internal_domain}"     # Subdomain
   type    = "A"                                # IPv4 address record
   ttl     = "300"                              # Time-to-live in seconds
   records = [aws_instance.nginx.private_ip]    # Points to EC2's private IP
 }
 
 # Data source to find the latest Ubuntu 20.04 AMI
-# This ensures we always use an up-to-date image
 data "aws_ami" "ubuntu" {
-  most_recent = true  # Get the newest AMI
+  most_recent = true  
 
   # Filter for Ubuntu 20.04 images
   filter {
@@ -150,7 +169,7 @@ data "aws_ami" "ubuntu" {
     values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
-  # Filter for HVM virtualization type (better performance)
+  # Filter for HVM virtualization type
   filter {
     name   = "virtualization-type"
     values = ["hvm"]

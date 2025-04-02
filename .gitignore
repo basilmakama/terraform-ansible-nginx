@@ -1,10 +1,27 @@
-# Top-level .gitignore
-# Terraform
+# Local Terraform directories
 **/.terraform/*
-**/*.tfstate*
-**/*.tfvars
+**/.terraform.lock.hcl
+
+# Terraform state files
+**/*.tfstate
+**/*.tfstate.*
+**/terraform.tfstate.backup
+
+# Terraform plan files
+**/tfplan
+**/*.tfplan
 
 # Ansible
-ansible/venv/
+ansible/inventory.ini
 ansible/*.retry
-ansible/roles/downloads/
+
+# Sensitive data
+**/.env
+**/*.pem
+**/*.pub
+**/terraform.tfvars
+
+# General
+.DS_Store
+.idea/
+*.swp
