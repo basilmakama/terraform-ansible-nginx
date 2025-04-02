@@ -88,6 +88,14 @@ resource "aws_security_group" "nginx" {
     cidr_blocks = [var.allowed_ssh_ip]  # From variables.tf
   }
 
+ ingress {
+    description = "SSH from specific IP"
+    from_port   = 80        # HTTP Port
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # From variables.tf
+  }
+
   # Outbound rule: Allow all outbound traffic
   egress {
     from_port   = 0        

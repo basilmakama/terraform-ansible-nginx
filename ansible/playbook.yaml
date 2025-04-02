@@ -1,7 +1,10 @@
 ---
 - hosts: webservers
   become: true
- 
+  vars:
+    domain: "batman.{{ domain_name }}" # From terraform.tfvars
+    internal_domain: "nginx.internal.com" 
+
   tasks:
     # Install Nginx
     - name: Install Nginx
@@ -25,7 +28,7 @@
           <html>
           <body>
             <h1>Hello from {{ ansible_hostname }}</h1>
-            <p>Internal DNS: {{ domain }}</p>
+            <p>Internal DNS: {{ internal_domain }}</p>
           </body>
           </html>
         dest: /var/www/html/index.html

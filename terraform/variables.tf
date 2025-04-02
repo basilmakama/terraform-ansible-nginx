@@ -31,3 +31,9 @@ variable "internal_domain" {
   type        = string
   default     = "internal.com"
 }
+
+variable "domain_name" {
+  description = "basilmakama.com"
+  type        = string
+  default     = "internal.com"
+}
