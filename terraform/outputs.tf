@@ -20,7 +20,7 @@ output "vpc_id" {
 }
 
 
-# This now EXECUTES the inventory update
+# Creates a self-updating ansible file
 output "update_inventory" {
   value = <<-EOT
     #!/bin/bash

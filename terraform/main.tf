@@ -17,7 +17,7 @@ provider "aws" {
 
 # VPC where all resources will live
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/24"  #  private IP addresses available
+  cidr_block = "10.0.0.0/24"
   enable_dns_support = true    # Required for DNS resolution
   enable_dns_hostnames = true  # Gives instances DNS names
   tags = {
@@ -26,13 +26,11 @@ resource "aws_vpc" "main" {
 }
 
 # Create a public subnet within the VPC
-# Public subnets can communicate with the internet
 resource "aws_subnet" "public" {
   vpc_id     = aws_vpc.main.id  # Attaches to our VPC
-  cidr_block = "10.0.0.0/26"    # 64 IP addresses in this subnet
+  cidr_block = "10.0.0.0/26" 
   map_public_ip_on_launch = true # Automatically assigns public IPs
   availability_zone = "${var.region}a"  # Places in first AZ of the region
-  
   tags = {
     Name = "nginx-public-subnet"  
   }
@@ -41,7 +39,6 @@ resource "aws_subnet" "public" {
 # Create an Internet Gateway that allows communication between our VPC and the internet
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id  # Attaches to our VPC
-  
   tags = {
     Name = "nginx-igw"  # Tag
   }
@@ -56,7 +53,6 @@ resource "aws_route_table" "public" {
     cidr_block = "0.0.0.0/0"  # All IPv4 addresses
     gateway_id = aws_internet_gateway.gw.id  # Points to our IGW
   }
-
   tags = {
     Name = "nginx-public-rt" 
   }
@@ -78,7 +74,7 @@ resource "aws_security_group" "nginx" {
   ingress {
     description = "HTTPS from anywhere"
     from_port   = 443       # HTTPS port
-    to_port     = 443       # Same as from_port for single port
+    to_port     = 443       
     protocol    = "tcp"      # TCP protocol for web traffic
     cidr_blocks = ["0.0.0.0/0"]  # Allow from all IPs
   }
@@ -90,13 +86,6 @@ resource "aws_security_group" "nginx" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.allowed_ssh_ip]  # From variables.tf
-  }
-
-  ingress {
-  from_port   = 80
-  to_port     = 80
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
   }
 
   # Outbound rule: Allow all outbound traffic
