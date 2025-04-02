@@ -13,7 +13,8 @@ This project automates the deployment of a secure Nginx web server on AWS using:
 - SSH key pair (~/.ssh/id_rsa)
 
 
-## 🚀 Deployment
+## Deployment
+
 
 ### Prerequisites
 - AWS account with IAM permissions
@@ -21,7 +22,8 @@ This project automates the deployment of a secure Nginx web server on AWS using:
 - SSH key pair (`~/.ssh/id_rsa.pub`)
 
 
-## Getting Started
+### Getting Started
+
 
 ### 1. Clone the repository
 ```bash
