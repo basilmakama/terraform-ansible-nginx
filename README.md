@@ -37,9 +37,14 @@ terraform init
 terraform plan
 terraform apply -auto-approve
 
-### 2. Ansible Configuration
+### 3. Inventory Setup
+terraform output -raw update_inventory | bash  
+chmod 644 ../ansible/inventory.ini
+
+### 4. Ansible Configuration
 cd ../ansible
 ansible-playbook -i inventory.ini playbook.yaml
+
 
 ##Key Components
 
