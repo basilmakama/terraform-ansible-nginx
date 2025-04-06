@@ -29,11 +29,5 @@ variable "allowed_ssh_ip" {
 variable "internal_domain" {
   description = "Internal domain name"
   type        = string
-  default     = "internal.com"
-}
-
-variable "domain_name" {
-  description = "basilmakama.com"
-  type        = string
-  default     = "internal.com"
+  default     = "senrep.internal"
 }

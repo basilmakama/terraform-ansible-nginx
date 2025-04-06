@@ -3,7 +3,7 @@
   become: true
   vars:
     domain: "batman.{{ domain_name }}" # From terraform.tfvars
-    internal_domain: "nginx.internal.com" 
+    internal_domain: "nginx.senrep.internal" 
 
   tasks:
     # Install Nginx
@@ -20,21 +20,8 @@
         state: started
         enabled: yes
 
-    # Basic homepage
-    - name: Create index.html
-      copy:
-        content: |
-          <!DOCTYPE html>
-          <html>
-          <body>
-            <h1>Hello from {{ ansible_hostname }}</h1>
-            <p>Internal DNS: {{ internal_domain }}</p>
-          </body>
-          </html>
-        dest: /var/www/html/index.html
-
   handlers:
-    - name: Restart Nginx
+    - name: Reload Nginx
       service:
         name: nginx
-        state: restarted
+        state: reloaded

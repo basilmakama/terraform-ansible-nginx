@@ -89,11 +89,11 @@ resource "aws_security_group" "nginx" {
   }
 
  ingress {
-    description = "SSH from specific IP"
+    description = "HTTP"
     from_port   = 80        # HTTP Port
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # From variables.tf
+    cidr_blocks = ["0.0.0.0/0"] 
   }
 
   # Outbound rule: Allow all outbound traffic
