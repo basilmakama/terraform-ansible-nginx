@@ -2,26 +2,87 @@
 - hosts: webservers
   become: true
   vars:
-    domain: "batman.{{ domain_name }}" # From terraform.tfvars
-    internal_domain: "nginx.senrep.internal" 
+    # Domain configuration (must match terraform.tfvars)
+    internal_domain: "internal.example.com"       # From terraform.tfvars internal_domain
+    subdomain: "nginx"                  # Your chosen subdomain
+    full_internal_dns: "{{ subdomain }}.{{ internal_domain }}"  # nginx.internal.example.com
 
   tasks:
-    # Install Nginx
+    # --- System Preparation ---
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    # --- Nginx Installation ---
     - name: Install Nginx
       apt:
         name: nginx
         state: latest
-        update_cache: yes
+        install_recommends: no  # Security best practice
 
-    # Start Nginx
+    # --- Service Management ---
     - name: Ensure Nginx is running
-      service:
+      systemd:
         name: nginx
         state: started
         enabled: yes
 
+    # --- DNS Validation ---
+    - name: Get server's private IP
+      command: hostname -I
+      register: server_ips
+      changed_when: false
+
+    - name: Verify internal DNS resolution
+      command: dig +short {{ full_internal_dns }}
+      register: dns_lookup
+      changed_when: false
+
+    - name: Validate DNS matches private IP
+      assert:
+        that:
+          - server_ips.stdout.strip() in dns_lookup.stdout
+        success_msg: "✅ DNS verified: {{ full_internal_dns }} → {{ server_ips.stdout.strip() }}"
+        fail_msg: "❌ DNS mismatch! {{ full_internal_dns }} should resolve to {{ server_ips.stdout.strip() }}"
+
+    # --- Test Page Configuration ---
+    - name: Create informational page
+      copy:
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Nginx Deployment Test</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 2rem; }
+              .success { color: #2ecc71; }
+              .info { margin: 1rem 0; padding: 0.5rem; background: #f8f9fa; }
+            </style>
+          </head>
+          <body>
+            <h1>Nginx Deployment Success</h1>
+            
+            <div class="info">
+              <h3>Connection Info</h3>
+              <p><strong>Public IP:</strong> {{ ansible_host }}</p>
+              <p><strong>Internal DNS:</strong> {{ full_internal_dns }}</p>
+              <p><strong>Private IP:</strong> {{ server_ips.stdout.strip() }}</p>
+            </div>
+
+            <div class="info">
+              <h3>DNS Validation</h3>
+              <p class="success">✓ Internal DNS configured correctly</p>
+              <p>dig result: {{ dns_lookup.stdout }}</p>
+            </div>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+        mode: 0644
+      notify: Reload Nginx
+
   handlers:
     - name: Reload Nginx
-      service:
+      systemd:
         name: nginx
         state: reloaded

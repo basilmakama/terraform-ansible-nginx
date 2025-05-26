@@ -29,5 +29,11 @@ variable "allowed_ssh_ip" {
 variable "internal_domain" {
   description = "Internal domain name"
   type        = string
-  default     = "senrep.internal"
+  default     = "internal.example.com"
+}
+
+variable "subdomain" {
+  description = "Subdomain"
+  type        = string
+  default     = "nginx"
 }

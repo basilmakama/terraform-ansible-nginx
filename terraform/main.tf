@@ -36,7 +36,7 @@ resource "aws_subnet" "public" {
   }
 }
 
-# Create an Internet Gateway that allows communication between our VPC and the internet
+# Internet Gateway for communication between VPC and the internet
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id  # Attaches to our VPC
   tags = {
@@ -44,7 +44,7 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
-# Create a Route Table for public traffic
+# Route Table for public traffic
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id  # Associated with our VPC
 
@@ -64,22 +64,22 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id # Public route table
 }
 
-# Security Group Controls inbound and outbound traffic to our EC2 instance
+# Security Group Controls for EC2
 resource "aws_security_group" "nginx" {
   name        = "nginx-sg" 
   description = "Allow HTTPS and limited SSH access"
   vpc_id      = aws_vpc.main.id  # Attaches to our VPC
 
-  # Inbound rule: Allow HTTPS (port 443) from anywhere
+  # HTTPS (port 443) from anywhere
   ingress {
     description = "HTTPS from anywhere"
     from_port   = 443       # HTTPS port
     to_port     = 443       
     protocol    = "tcp"      # TCP protocol for web traffic
-    cidr_blocks = ["0.0.0.0/0"]  # Allow from all IPs
+    cidr_blocks = ["0.0.0.0/0"] 
   }
 
-  # Inbound rule: Allow SSH (port 22) only from specified IP
+  # Restricted SSH access
   ingress {
     description = "SSH from specific IP"
     from_port   = 22        # SSH port
@@ -87,16 +87,17 @@ resource "aws_security_group" "nginx" {
     protocol    = "tcp"
     cidr_blocks = [var.allowed_ssh_ip]  # From variables.tf
   }
-
+  
+  # HTTP access for Let's Encrypt verification
  ingress {
     description = "HTTP"
-    from_port   = 80        # HTTP Port
+    from_port   = 80        
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"] 
   }
 
-  # Outbound rule: Allow all outbound traffic
+  # Allow all outbound traffic
   egress {
     from_port   = 0        
     to_port     = 0         
@@ -120,11 +121,17 @@ resource "aws_instance" "nginx" {
   # User data script that runs when instance first launches
   # Installs Python3 which is required for Ansible to work
   user_data = <<-EOF
-              #!/bin/bash
-              apt-get update
-              apt-get install -y python3 python3-pip
-              pip3 install --upgrade pip
-              EOF
+               #!/bin/bash
+                apt-get update
+                apt-get install -y python3 python3-pip software-properties-common
+                add-apt-repository --yes --update ppa:ansible/ansible
+                apt-get install -y ansible
+                # Create ansible user
+                useradd -m -s /bin/bash ansible
+                mkdir -p /home/ansible/.ssh
+                cp /home/ubuntu/.ssh/authorized_keys /home/ansible/.ssh/
+                chown -R ansible:ansible /home/ansible/.ssh
+                EOF
 
   tags = {
     Name = "nginx-server" 
@@ -137,7 +144,7 @@ resource "aws_key_pair" "nginx" {
   public_key = file(var.public_key_path)  # Path to your local public key
 }
 
-# Create a private Route53 DNS zone
+# Create an Internal Route53 DNS zone
 resource "aws_route53_zone" "internal" {
   name    = var.internal_domain  # Domain name (from variables.tf)
   comment = "Internal zone for nginx server"
@@ -150,7 +157,7 @@ resource "aws_route53_zone" "internal" {
 # Create a DNS A record pointing to our EC2 instance
 resource "aws_route53_record" "nginx" {
   zone_id = aws_route53_zone.internal.zone_id  # Our private zone
-  name    = "nginx.${var.internal_domain}"     # Subdomain
+  name    = "${var.subdomain}.${var.internal_domain}"      # Subdomain
   type    = "A"                                # IPv4 address record
   ttl     = "300"                              # Time-to-live in seconds
   records = [aws_instance.nginx.private_ip]    # Points to EC2's private IP
