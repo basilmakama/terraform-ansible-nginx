@@ -3,9 +3,9 @@
   become: true
   vars:
     # Domain configuration
-    internal_domain: "internal.example.com"       # From terraform.tfvars internal_domain
-    subdomain: "nginx"                  # Your chosen subdomain
-    full_internal_dns: "{{ subdomain }}.{{ internal_domain }}"  # nginx.internal.example.com
+    internal_domain: "internal.example.com"       
+    subdomain: "nginx"                 
+    full_internal_dns: "{{ subdomain }}.{{ internal_domain }}" 
 
   tasks:
     # --- System Preparation ---
@@ -19,7 +19,7 @@
       apt:
         name: nginx
         state: latest
-        install_recommends: no  # Security best practice
+        install_recommends: no  
 
     # --- Service Management ---
     - name: Ensure Nginx is running

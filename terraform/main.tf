@@ -18,8 +18,8 @@ provider "aws" {
 # VPC where all resources will live
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/24"
-  enable_dns_support = true    # Required for DNS resolution
-  enable_dns_hostnames = true  # Gives instances DNS names
+  enable_dns_support = true    
+  enable_dns_hostnames = true  
   tags = {
     Name = "nginx-vpc"  
   }
@@ -27,10 +27,10 @@ resource "aws_vpc" "main" {
 
 # Create a public subnet within the VPC
 resource "aws_subnet" "public" {
-  vpc_id     = aws_vpc.main.id  # Attaches to our VPC
+  vpc_id     = aws_vpc.main.id  
   cidr_block = "10.0.0.0/26" 
-  map_public_ip_on_launch = true # Automatically assigns public IPs
-  availability_zone = "${var.region}a"  # Places in first AZ of the region
+  map_public_ip_on_launch = true 
+  availability_zone = "${var.region}a"  
   tags = {
     Name = "nginx-public-subnet"  
   }
@@ -38,7 +38,7 @@ resource "aws_subnet" "public" {
 
 # Internet Gateway for communication between VPC and the internet
 resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id  # Attaches to our VPC
+  vpc_id = aws_vpc.main.id 
   tags = {
     Name = "nginx-igw"  # Tag
   }
@@ -46,7 +46,7 @@ resource "aws_internet_gateway" "gw" {
 
 # Route Table for public traffic
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id  # Associated with our VPC
+  vpc_id = aws_vpc.main.id  
 
   # Sends all traffic to the Internet Gateway
   route {
@@ -112,9 +112,9 @@ resource "aws_security_group" "nginx" {
 
 # Create the EC2 instance
 resource "aws_instance" "nginx" {
-  ami           = data.aws_ami.ubuntu.id  # Uses latest Ubuntu AMI
-  instance_type = var.instance_type       # Instance type
-  subnet_id     = aws_subnet.public.id    # Places in public subnet
+  ami           = data.aws_ami.ubuntu.id  
+  instance_type = var.instance_type       
+  subnet_id     = aws_subnet.public.id    
   vpc_security_group_ids = [aws_security_group.nginx.id]  # Applies our security group
   key_name      = aws_key_pair.nginx.key_name  # SSH key for access
 
@@ -140,7 +140,7 @@ resource "aws_instance" "nginx" {
 
 # SSH key pair for secure access
 resource "aws_key_pair" "nginx" {
-  key_name   = "nginx-key"                # Name of key in AWS
+  key_name   = "nginx-key"                
   public_key = file(var.public_key_path)  # Path to your local public key
 }
 
@@ -156,11 +156,11 @@ resource "aws_route53_zone" "internal" {
 
 # Create a DNS A record pointing to our EC2 instance
 resource "aws_route53_record" "nginx" {
-  zone_id = aws_route53_zone.internal.zone_id  # Our private zone
-  name    = "${var.subdomain}.${var.internal_domain}"      # Subdomain
-  type    = "A"                                # IPv4 address record
-  ttl     = "300"                              # Time-to-live in seconds
-  records = [aws_instance.nginx.private_ip]    # Points to EC2's private IP
+  zone_id = aws_route53_zone.internal.zone_id  
+  name    = "${var.subdomain}.${var.internal_domain}"      
+  type    = "A"                                
+  ttl     = "300"                              
+  records = [aws_instance.nginx.private_ip]    
 }
 
 # Data source to find the latest Ubuntu 20.04 AMI
