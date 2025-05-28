@@ -2,7 +2,7 @@
 - hosts: webservers
   become: true
   vars:
-    # Domain configuration (must match terraform.tfvars)
+    # Domain configuration
     internal_domain: "internal.example.com"       # From terraform.tfvars internal_domain
     subdomain: "nginx"                  # Your chosen subdomain
     full_internal_dns: "{{ subdomain }}.{{ internal_domain }}"  # nginx.internal.example.com
@@ -43,8 +43,8 @@
       assert:
         that:
           - server_ips.stdout.strip() in dns_lookup.stdout
-        success_msg: "✅ DNS verified: {{ full_internal_dns }} → {{ server_ips.stdout.strip() }}"
-        fail_msg: "❌ DNS mismatch! {{ full_internal_dns }} should resolve to {{ server_ips.stdout.strip() }}"
+        success_msg: "DNS verified: {{ full_internal_dns }} → {{ server_ips.stdout.strip() }}"
+        fail_msg: "DNS mismatch! {{ full_internal_dns }} should resolve to {{ server_ips.stdout.strip() }}"
 
     # --- Test Page Configuration ---
     - name: Create informational page

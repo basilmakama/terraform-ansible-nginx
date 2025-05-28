@@ -46,7 +46,7 @@ output "ssh_access_command" {
 output "update_inventory" {
   value = <<-EOT
     #!/bin/bash
-    set -eo pipefail  # Better error handling
+    set -eo pipefail
     
     # Configurable paths
     INVENTORY_DIR="${path.module}/../ansible"
@@ -68,10 +68,10 @@ output "update_inventory" {
     
     # Post-generation validation
     if [ ! -f "$PRIVATE_KEY" ]; then
-      echo "⚠️ Warning: SSH private key not found at $PRIVATE_KEY" >&2
+      echo "SSH private key not found at $PRIVATE_KEY" >&2
     fi
     
-    echo "✅ Ansible inventory updated:"
+    echo "Ansible inventory updated:"
     cat "$INVENTORY_FILE"
   EOT
 }
